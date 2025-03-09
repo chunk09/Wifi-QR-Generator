@@ -133,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /** 안드로이드 10 이상에는 작동 안됨
     private void saveImageToGallery(Context context, Bitmap bitmap) {
         // 저장할 디렉토리 및 파일명 설정
         String directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
@@ -155,11 +156,40 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(context, "이미지를 다운 받는 데 실패했습니다.", Toast.LENGTH_SHORT).show();
         }
     }
+    */
 
+    private void saveImageToGallery(Context context, Bitmap bitmap) {
+        OutputStream fos;
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ContentResolver resolver = context.getContentResolver();
+                ContentValues contentValues = new ContentValues();
+                contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, "Wifi-QR.png");
+                contentValues.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+                contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/WifiQR");
+                Uri imageUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+                if (imageUri == null) {
+                    throw new IOException("Failed to create new MediaStore record.");
+                }
+                fos = resolver.openOutputStream(imageUri);
+            } else {
+                File directory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "WifiQR");
+                if (!directory.exists()) {
+                    directory.mkdirs();
+                }
+                File file = new File(directory, "Wifi-QR.png");
+                fos = new FileOutputStream(file);
+            }
 
-
-
-
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            fos.flush();
+            fos.close();
+            Toast.makeText(context, "이미지가 갤러리에 다운로드 되었습니다.", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(context, "이미지를 다운 받는 데 실패했습니다.", Toast.LENGTH_SHORT).show();
+        }
+    }
 
 
 
